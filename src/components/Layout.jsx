@@ -6,6 +6,7 @@ const LINKS = [
   { to: '/pneus', label: 'Pneus', icon: 'N' },
   { to: '/equipamentos', label: 'Equipamentos', icon: 'E' },
   { to: '/rodizio', label: 'Rodízio', icon: 'R' },
+  { to: '/movimentacoes', label: 'Movimentações', icon: 'M' },
 ]
 
 export function Layout() {
