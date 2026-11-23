@@ -80,10 +80,9 @@ nav a.active, nav a:hover { background: #145c3c; color: white; }
   place-items: center;
   background: #145c3c;
   color: #e7f6ec;
-  font-size: 13px;
-  font-weight: 700;
   flex: 0 0 28px;
 }
+.nav-icon svg { display: block; }
 
 .sidebar-toggle {
   margin-top: auto;
@@ -92,6 +91,10 @@ nav a.active, nav a:hover { background: #145c3c; color: white; }
   border: 1px solid #1d5c40;
   border-radius: 12px;
   padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 .sidebar-toggle:hover { background: #145c3c; }
 
@@ -115,8 +118,6 @@ nav a.active, nav a:hover { background: #145c3c; color: white; }
 .app.recolhida nav a,
 .app.recolhida .swagger,
 .app.recolhida .sidebar-toggle { justify-content: center; width: 100%; }
-.app.recolhida .sidebar-toggle { font-size: 0; }
-.app.recolhida .sidebar-toggle::after { content: "›"; font-size: 22px; line-height: 1; }
 
 main {
   min-width: 0;
@@ -534,8 +535,6 @@ tbody tr:hover { background: #f3faf4; }
   .page-body, .bancada, .estoque-zona, .maquina-painel, .page-body.split .panel { overflow: visible; height: auto; }
   .app.recolhida .brand-text,
   .app.recolhida .nav-label { display: initial; }
-  .app.recolhida .sidebar-toggle { font-size: inherit; }
-  .app.recolhida .sidebar-toggle::after { content: none; }
   .bancada { grid-template-columns: 1fr; }
   aside { position: static; height: auto; }
   nav { flex-direction: row; flex-wrap: wrap; }

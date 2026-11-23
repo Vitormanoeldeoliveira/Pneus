@@ -119,12 +119,17 @@ export function Equipamentos() {
   async function salvar(event) {
     event.preventDefault()
     const posicoes = Number(form.quantidadePosicoes)
-    if (!form.codigo.trim() || !form.nome.trim()) {
-      setErroForm('Informe código e nome')
-      return
+    const faltas = []
+    if (!form.codigo.trim()) faltas.push('Falta o código')
+    if (!form.nome.trim()) faltas.push('Falta o nome')
+    if (!form.tipo) faltas.push('Falta o tipo')
+    if (!form.status) faltas.push('Falta o status')
+    if (!String(form.quantidadePosicoes).trim()) faltas.push('Falta a quantidade de posições')
+    else if (!Number.isInteger(posicoes) || posicoes < 1 || posicoes > 24) {
+      faltas.push('A quantidade de posições precisa ser de 1 a 24')
     }
-    if (!Number.isInteger(posicoes) || posicoes < 1 || posicoes > 24) {
-      setErroForm('Informe de 1 a 24 posições')
+    if (faltas.length) {
+      setErroForm(faltas.join('. '))
       return
     }
     const payload = {
@@ -206,7 +211,7 @@ export function Equipamentos() {
 
       {form && (
         <Modal title={form.id ? 'Editar equipamento' : 'Novo equipamento'} onClose={() => setForm(null)}>
-          <form onSubmit={salvar}>
+          <form onSubmit={salvar} noValidate>
             <div className="form-grid">
               <label>Código<input value={form.codigo} onChange={(event) => atualizar('codigo', event.target.value)} required /></label>
               <label>Nome<input value={form.nome} onChange={(event) => atualizar('nome', event.target.value)} required /></label>

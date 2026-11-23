@@ -1,12 +1,22 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import {
+  PiArrowsClockwise,
+  PiBookOpen,
+  PiCaretLeft,
+  PiCaretRight,
+  PiClockCounterClockwise,
+  PiGauge,
+  PiTire,
+  PiTruck,
+} from 'react-icons/pi'
 
 const LINKS = [
-  { to: '/', label: 'Painel', end: true, icon: 'P' },
-  { to: '/pneus', label: 'Pneus', icon: 'N' },
-  { to: '/equipamentos', label: 'Equipamentos', icon: 'E' },
-  { to: '/rodizio', label: 'Rodízio', icon: 'R' },
-  { to: '/movimentacoes', label: 'Movimentações', icon: 'M' },
+  { to: '/', label: 'Painel', end: true, Icon: PiGauge },
+  { to: '/pneus', label: 'Pneus', Icon: PiTire },
+  { to: '/equipamentos', label: 'Equipamentos', Icon: PiTruck },
+  { to: '/rodizio', label: 'Rodízio', Icon: PiArrowsClockwise },
+  { to: '/movimentacoes', label: 'Movimentações', Icon: PiClockCounterClockwise },
 ]
 
 export function Layout() {
@@ -29,7 +39,7 @@ export function Layout() {
         <nav>
           {LINKS.map((link) => (
             <NavLink key={link.to} to={link.to} end={link.end} title={link.label}>
-              <span className="nav-icon" aria-hidden="true">{link.icon}</span>
+              <span className="nav-icon" aria-hidden="true"><link.Icon size={17} /></span>
               <span className="nav-label">{link.label}</span>
             </NavLink>
           ))}
@@ -38,12 +48,14 @@ export function Layout() {
           type="button"
           className="sidebar-toggle"
           aria-expanded={aberta}
+          title={aberta ? 'Recolher' : 'Expandir'}
           onClick={() => setAberta((valor) => !valor)}
         >
-          {aberta ? 'Recolher' : 'Expandir'}
+          {aberta ? <PiCaretLeft size={18} /> : <PiCaretRight size={18} />}
+          <span className="nav-label">{aberta ? 'Recolher' : 'Expandir'}</span>
         </button>
         <a className="swagger" href="http://localhost:8080/swagger-ui.html" target="_blank" rel="noreferrer" title="Swagger">
-          <span className="nav-icon" aria-hidden="true">S</span>
+          <PiBookOpen size={16} aria-hidden="true" />
           <span className="nav-label">Abrir Swagger</span>
         </a>
       </aside>

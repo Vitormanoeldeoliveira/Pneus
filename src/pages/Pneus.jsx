@@ -19,21 +19,28 @@ const VAZIO = {
 }
 
 function numero(valor) {
-  const n = Number(String(valor).replace(',', '.'))
+  const texto = String(valor).trim()
+  if (!texto) return null
+  const n = Number(texto.replace(',', '.'))
   return Number.isFinite(n) ? n : null
 }
 
 function validar(form) {
-  if (!form.codigo.trim()) return 'Informe o código'
-  if (!/^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(form.codigo.trim())) {
-    return 'Código só pode ter letras, números, ponto, barra e hífen'
+  const faltas = []
+  if (!form.codigo.trim()) faltas.push('Falta o código')
+  else if (!/^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(form.codigo.trim())) {
+    faltas.push('Código só pode ter letras, números, ponto, barra e hífen')
   }
-  if (!form.marca.trim() || !form.modelo.trim() || !form.medida.trim()) return 'Preencha marca, modelo e medida'
+  if (!form.marca.trim()) faltas.push('Falta a marca')
+  if (!form.modelo.trim()) faltas.push('Falta o modelo')
+  if (!form.medida.trim()) faltas.push('Falta a medida')
   const sulco = numero(form.sulcoMm)
-  if (sulco == null || sulco < 0) return 'Informe o sulco em milímetros'
+  if (sulco == null) faltas.push('Falta o sulco')
+  else if (sulco < 0) faltas.push('O sulco não pode ser negativo')
   const rodagem = numero(form.km)
-  if (rodagem == null || rodagem < 0) return 'Informe a quilometragem'
-  return null
+  if (rodagem == null) faltas.push('Falta a quilometragem')
+  else if (rodagem < 0) faltas.push('A quilometragem não pode ser negativa')
+  return faltas.length ? faltas.join('. ') : null
 }
 
 export function Pneus() {
@@ -201,7 +208,7 @@ export function Pneus() {
 
       {form && (
         <Modal title={form.id ? 'Editar pneu' : 'Novo pneu'} onClose={() => setForm(null)}>
-          <form onSubmit={salvar}>
+          <form onSubmit={salvar} noValidate>
             <div className="form-grid">
               <label>Código<input value={form.codigo} onChange={(event) => atualizar('codigo', event.target.value)} required /></label>
               <label>Marca<input value={form.marca} onChange={(event) => atualizar('marca', event.target.value)} required /></label>
