@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../api'
-import { Filtros, textoContem } from '../components/Filtros'
+import { Filtros } from '../components/Filtros'
 
 function quando(valor) {
   if (!valor) return '—'
@@ -16,7 +16,7 @@ export function Movimentacoes() {
 
   async function carregar() {
     try {
-      setItens(await api.listarMovimentacoes())
+      setItens(await api.listarMovimentacoes(filtros))
       setErro('')
     } catch (error) {
       setErro(error.message)
@@ -24,14 +24,24 @@ export function Movimentacoes() {
   }
 
   useEffect(() => {
-    carregar()
-  }, [])
-
-  const visiveis = useMemo(() => itens.filter((item) => (
-    textoContem(item.pneu?.codigo, filtros.pneu)
-    && textoContem(item.origem, filtros.origem)
-    && textoContem(item.destino, filtros.destino)
-  )), [itens, filtros])
+    let vivo = true
+    const espera = setTimeout(() => {
+      api.listarMovimentacoes(filtros)
+        .then((lista) => {
+          if (vivo) {
+            setItens(lista)
+            setErro('')
+          }
+        })
+        .catch((error) => {
+          if (vivo) setErro(error.message)
+        })
+    }, 250)
+    return () => {
+      vivo = false
+      clearTimeout(espera)
+    }
+  }, [filtros])
 
   return (
     <>
@@ -62,7 +72,7 @@ export function Movimentacoes() {
             </tr>
           </thead>
           <tbody>
-            {visiveis.map((item) => (
+            {itens.map((item) => (
               <tr key={item.id}>
                 <td>{quando(item.dataHora)}</td>
                 <td><strong>{item.pneu?.codigo || '—'}</strong></td>
@@ -70,7 +80,7 @@ export function Movimentacoes() {
                 <td>{item.destino}</td>
               </tr>
             ))}
-            {visiveis.length === 0 && (
+            {itens.length === 0 && (
               <tr>
                 <td colSpan="4">
                   <p className="empty">Nenhuma movimentação encontrada. Elas aparecem ao montar, retirar ou trocar um pneu.</p>

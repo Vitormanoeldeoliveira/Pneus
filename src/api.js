@@ -19,12 +19,25 @@ async function request(path, { method = 'GET', body } = {}) {
   return data
 }
 
+function consulta(path, params) {
+  const search = new URLSearchParams()
+  if (params) {
+    for (const [chave, valor] of Object.entries(params)) {
+      if (valor !== undefined && valor !== null && String(valor).trim() !== '') {
+        search.set(chave, String(valor).trim())
+      }
+    }
+  }
+  const texto = search.toString()
+  return request(texto ? `${path}?${texto}` : path)
+}
+
 export const api = {
-  listarPneus: () => request('/pneus'),
+  listarPneus: (filtros) => consulta('/pneus', filtros),
   criarPneu: (body) => request('/pneus', { method: 'POST', body }),
   atualizarPneu: (id, body) => request(`/pneus/${id}`, { method: 'PUT', body }),
   excluirPneu: (id) => request(`/pneus/${id}`, { method: 'DELETE' }),
-  listarEstoque: () => request('/pneus/estoque'),
+  listarEstoque: (filtros) => consulta('/pneus/estoque', filtros),
   montar: (equipamentoId, posicao, pneuId) => request(`/equipamentos/${equipamentoId}/posicoes/${posicao}`, {
     method: 'POST',
     body: { pneuId },
@@ -35,10 +48,10 @@ export const api = {
     body: { posicaoOrigem, posicaoDestino },
   }),
 
-  listarEquipamentos: () => request('/equipamentos'),
+  listarEquipamentos: (filtros) => consulta('/equipamentos', filtros),
   buscarEquipamento: (id) => request(`/equipamentos/${id}`),
   criarEquipamento: (body) => request('/equipamentos', { method: 'POST', body }),
   atualizarEquipamento: (id, body) => request(`/equipamentos/${id}`, { method: 'PUT', body }),
   excluirEquipamento: (id) => request(`/equipamentos/${id}`, { method: 'DELETE' }),
-  listarMovimentacoes: () => request('/movimentacoes'),
+  listarMovimentacoes: (filtros) => consulta('/movimentacoes', filtros),
 }

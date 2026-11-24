@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../api'
-import { Filtros, textoContem } from '../components/Filtros'
+import { Filtros } from '../components/Filtros'
 import { Maquina } from '../components/Maquina'
 import { Toast, useToast } from '../components/Toast'
 import { TIPO_EQUIPAMENTO } from '../labels'
@@ -48,11 +48,10 @@ export function Rodizio() {
       return undefined
     }
     let vivo = true
-    Promise.all([api.buscarEquipamento(equipamentoId), api.listarEstoque()])
-      .then(([detalhe, livres]) => {
+    api.buscarEquipamento(equipamentoId)
+      .then((detalhe) => {
         if (!vivo) return
         setEquipamento(detalhe)
-        setEstoque(livres)
         setErro('')
       })
       .catch((error) => {
@@ -63,6 +62,24 @@ export function Rodizio() {
     }
   }, [equipamentoId])
 
+  useEffect(() => {
+    if (!equipamentoId) return undefined
+    let vivo = true
+    const espera = setTimeout(() => {
+      api.listarEstoque(filtros)
+        .then((livres) => {
+          if (vivo) setEstoque(livres)
+        })
+        .catch((error) => {
+          if (vivo) setErro(error.message)
+        })
+    }, 250)
+    return () => {
+      vivo = false
+      clearTimeout(espera)
+    }
+  }, [equipamentoId, filtros])
+
   function escolher(id) {
     setEquipamentoId(id)
     setParams(id ? { equipamento: id } : {}, { replace: true })
@@ -71,7 +88,7 @@ export function Rodizio() {
   async function recarregar() {
     const [detalhe, livres] = await Promise.all([
       api.buscarEquipamento(equipamentoId),
-      api.listarEstoque(),
+      api.listarEstoque(filtros),
     ])
     setEquipamento(detalhe)
     setEstoque(livres)
@@ -131,13 +148,6 @@ export function Rodizio() {
     executar(() => api.retirar(equipamentoId, dado.valor))
   }
 
-  const visiveis = estoque.filter((pneu) => (
-    textoContem(pneu.codigo, filtros.codigo)
-    && textoContem(pneu.marca, filtros.marca)
-    && textoContem(pneu.modelo, filtros.modelo)
-    && textoContem(pneu.medida, filtros.medida)
-  ))
-
   return (
     <>
       <header className="page-head">
@@ -184,7 +194,7 @@ export function Rodizio() {
             <h2>Estoque</h2>
             <p className="hint">Solte um pneu montado aqui para retirar do equipamento.</p>
             <div className="estoque-lista">
-              {visiveis.map((pneu) => (
+              {estoque.map((pneu) => (
                 <article
                   key={pneu.id}
                   className="pneu-arraste"
@@ -198,7 +208,7 @@ export function Rodizio() {
                   <small>{pneu.medida}</small>
                 </article>
               ))}
-              {visiveis.length === 0 && <p className="empty">Nenhum pneu em estoque.</p>}
+              {estoque.length === 0 && <p className="empty">Nenhum pneu em estoque.</p>}
             </div>
           </aside>
           <div className="maquina-painel">

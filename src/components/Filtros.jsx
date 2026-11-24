@@ -15,12 +15,6 @@ const campo = {
   aberto: { y: 0, opacity: 1, transition: { duration: 0.22, ease: 'easeOut' } },
 }
 
-export function textoContem(valor, filtro) {
-  const texto = filtro.trim().toLowerCase()
-  if (!texto) return true
-  return String(valor ?? '').toLowerCase().includes(texto)
-}
-
 export function Filtros({ campos, valores, onChange }) {
   const [aberto, setAberto] = useState(false)
   const ativos = campos.filter((item) => valores[item.nome]).length

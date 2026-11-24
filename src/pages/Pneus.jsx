@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../api'
 import { useConfirm } from '../components/Confirm'
-import { Filtros, textoContem } from '../components/Filtros'
+import { Filtros } from '../components/Filtros'
 import { Modal } from '../components/Modal'
 import { Toast, useToast } from '../components/Toast'
 import { STATUS_PNEU, km, mm } from '../labels'
@@ -55,7 +55,7 @@ export function Pneus() {
 
   async function carregar() {
     try {
-      setPneus(await api.listarPneus())
+      setPneus(await api.listarPneus(filtros))
       setErro('')
     } catch (error) {
       setErro(error.message)
@@ -63,17 +63,24 @@ export function Pneus() {
   }
 
   useEffect(() => {
-    carregar()
-  }, [])
-
-  const visiveis = useMemo(() => pneus.filter((pneu) => (
-    textoContem(pneu.codigo, filtros.codigo)
-    && textoContem(pneu.marca, filtros.marca)
-    && textoContem(pneu.modelo, filtros.modelo)
-    && textoContem(pneu.medida, filtros.medida)
-    && textoContem(pneu.equipamento?.codigo, filtros.equipamento)
-    && (!filtros.status || pneu.status === filtros.status)
-  )), [pneus, filtros])
+    let vivo = true
+    const espera = setTimeout(() => {
+      api.listarPneus(filtros)
+        .then((lista) => {
+          if (vivo) {
+            setPneus(lista)
+            setErro('')
+          }
+        })
+        .catch((error) => {
+          if (vivo) setErro(error.message)
+        })
+    }, 250)
+    return () => {
+      vivo = false
+      clearTimeout(espera)
+    }
+  }, [filtros])
 
   function abrirNovo() {
     setErroForm('')
@@ -182,7 +189,7 @@ export function Pneus() {
             </tr>
           </thead>
           <tbody>
-            {visiveis.map((pneu) => (
+            {pneus.map((pneu) => (
               <tr key={pneu.id}>
                 <td><strong>{pneu.codigo}</strong></td>
                 <td>{pneu.marca} {pneu.modelo}</td>
@@ -199,7 +206,7 @@ export function Pneus() {
                 </td>
               </tr>
             ))}
-            {visiveis.length === 0 && (
+            {pneus.length === 0 && (
               <tr><td colSpan="8"><p className="empty">Nenhum pneu encontrado.</p></td></tr>
             )}
           </tbody>

@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { useConfirm } from '../components/Confirm'
-import { Filtros, textoContem } from '../components/Filtros'
+import { Filtros } from '../components/Filtros'
 import { Modal } from '../components/Modal'
 import { Toast, useToast } from '../components/Toast'
 import { STATUS_EQUIPAMENTO, TIPO_EQUIPAMENTO } from '../labels'
@@ -74,7 +74,7 @@ export function Equipamentos() {
 
   async function carregar() {
     try {
-      setEquipamentos(await api.listarEquipamentos())
+      setEquipamentos(await api.listarEquipamentos(filtros))
       setErro('')
     } catch (error) {
       setErro(error.message)
@@ -82,16 +82,24 @@ export function Equipamentos() {
   }
 
   useEffect(() => {
-    carregar()
-  }, [])
-
-  const visiveis = useMemo(() => equipamentos.filter((item) => (
-    textoContem(item.codigo, filtros.codigo)
-    && textoContem(item.nome, filtros.nome)
-    && textoContem(item.placa, filtros.placa)
-    && (!filtros.tipo || item.tipo === filtros.tipo)
-    && (!filtros.status || item.status === filtros.status)
-  )), [equipamentos, filtros])
+    let vivo = true
+    const espera = setTimeout(() => {
+      api.listarEquipamentos(filtros)
+        .then((lista) => {
+          if (vivo) {
+            setEquipamentos(lista)
+            setErro('')
+          }
+        })
+        .catch((error) => {
+          if (vivo) setErro(error.message)
+        })
+    }, 250)
+    return () => {
+      vivo = false
+      clearTimeout(espera)
+    }
+  }, [filtros])
 
   function abrirNovo() {
     setErroForm('')
@@ -188,7 +196,7 @@ export function Equipamentos() {
       />
       {erro && <div className="form-error">{erro}</div>}
       <section className="page-body eq-grid">
-        {visiveis.map((item) => (
+        {equipamentos.map((item) => (
           <article className="eq-card" key={item.id}>
             <div className="card-top">
               <div>
@@ -207,7 +215,7 @@ export function Equipamentos() {
           </article>
         ))}
       </section>
-      {visiveis.length === 0 && !erro && <p className="empty">Nenhum equipamento encontrado.</p>}
+      {equipamentos.length === 0 && !erro && <p className="empty">Nenhum equipamento encontrado.</p>}
 
       {form && (
         <Modal title={form.id ? 'Editar equipamento' : 'Novo equipamento'} onClose={() => setForm(null)}>

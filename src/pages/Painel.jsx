@@ -1,19 +1,21 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
-import { Filtros, textoContem } from '../components/Filtros'
+import { Filtros } from '../components/Filtros'
 import { TIPO_EQUIPAMENTO } from '../labels'
 
 export function Painel() {
-  const [dados, setDados] = useState({ pneus: [], equipamentos: [] })
+  const [totais, setTotais] = useState({ pneus: [], equipamentos: [] })
+  const [equipamentos, setEquipamentos] = useState([])
+  const [prontos, setProntos] = useState([])
   const [erro, setErro] = useState('')
   const [filtros, setFiltros] = useState({ codigo: '', nome: '', tipo: '', marca: '', medida: '' })
 
   useEffect(() => {
     let vivo = true
     Promise.all([api.listarPneus(), api.listarEquipamentos()])
-      .then(([pneus, equipamentos]) => {
-        if (vivo) setDados({ pneus, equipamentos })
+      .then(([pneus, lista]) => {
+        if (vivo) setTotais({ pneus, equipamentos: lista })
       })
       .catch((error) => {
         if (vivo) setErro(error.message)
@@ -23,21 +25,33 @@ export function Painel() {
     }
   }, [])
 
-  const equipamentos = useMemo(() => dados.equipamentos.filter((item) => (
-    textoContem(item.codigo, filtros.codigo)
-    && textoContem(item.nome, filtros.nome)
-    && (!filtros.tipo || item.tipo === filtros.tipo)
-  )), [dados.equipamentos, filtros])
-  const prontos = useMemo(() => dados.pneus.filter((pneu) => (
-    pneu.status === 'ESTOQUE'
-    && textoContem(pneu.codigo, filtros.codigo)
-    && textoContem(pneu.marca, filtros.marca)
-    && textoContem(pneu.medida, filtros.medida)
-  )), [dados.pneus, filtros])
-  const estoque = dados.pneus.filter((pneu) => pneu.status === 'ESTOQUE').length
-  const emUso = dados.pneus.filter((pneu) => pneu.status === 'EM_USO').length
-  const ativos = dados.equipamentos.filter((item) => item.status === 'ATIVO').length
-  const montados = dados.equipamentos.reduce((total, item) => total + item.pneus.length, 0)
+  useEffect(() => {
+    let vivo = true
+    const espera = setTimeout(() => {
+      Promise.all([
+        api.listarEstoque({ codigo: filtros.codigo, marca: filtros.marca, medida: filtros.medida }),
+        api.listarEquipamentos({ codigo: filtros.codigo, nome: filtros.nome, tipo: filtros.tipo }),
+      ])
+        .then(([livres, lista]) => {
+          if (!vivo) return
+          setProntos(livres)
+          setEquipamentos(lista)
+          setErro('')
+        })
+        .catch((error) => {
+          if (vivo) setErro(error.message)
+        })
+    }, 250)
+    return () => {
+      vivo = false
+      clearTimeout(espera)
+    }
+  }, [filtros])
+
+  const estoque = totais.pneus.filter((pneu) => pneu.status === 'ESTOQUE').length
+  const emUso = totais.pneus.filter((pneu) => pneu.status === 'EM_USO').length
+  const ativos = totais.equipamentos.filter((item) => item.status === 'ATIVO').length
+  const montados = totais.equipamentos.reduce((total, item) => total + item.pneus.length, 0)
 
   return (
     <>
